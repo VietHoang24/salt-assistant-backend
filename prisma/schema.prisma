@@ -74,18 +74,24 @@ model user_categories {
 // -------------------------------------------------------------
 // GOALS
 // -------------------------------------------------------------
+enum GoalType {
+  yearly
+  monthly
+  weekly
+}
+
 model user_goals {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   user_id     String
-  type        String
   title       String
   description String?
-  progress    Decimal?  @db.Decimal
-  status      String
-  due_date    DateTime? @db.Date
-  remind_time DateTime? @db.Time
-  created_at  DateTime  @db.Timestamptz
-  updated_at  DateTime  @db.Timestamptz
+  type        GoalType
+
+  created_at DateTime @db.Timestamptz
+  updated_at DateTime @db.Timestamptz
+
+  start_date DateTime @db.Timestamptz
+  end_date   DateTime @db.Timestamptz
 
   user users            @relation(fields: [user_id], references: [id])
   logs user_goal_logs[]

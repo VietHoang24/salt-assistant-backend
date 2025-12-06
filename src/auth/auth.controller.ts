@@ -2,16 +2,19 @@ import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import type { Request, Response } from 'express';
+import { Public } from './public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Get('google')
+  @Public()
   @UseGuards(AuthGuard('google'))
   async googleAuth() {}
 
   @Get('google/callback')
+  @Public()
   @UseGuards(AuthGuard('google'))
   async googleCallback(@Req() req: Request, @Res() res: Response) {
     if (!req.user) {

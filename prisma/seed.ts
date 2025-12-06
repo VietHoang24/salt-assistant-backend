@@ -48,8 +48,17 @@ async function main() {
   // ------------------------------------
   // CATEGORIES (default interest topics)
   // ------------------------------------
+  // ------------------------------------
+  // CATEGORIES (default interest topics)
+  // ------------------------------------
+
+  // 1. Xoá user_categories trước vì nó FK tới categories
+  await prisma.user_categories.deleteMany();
+
+  // 2. Sau đó mới được xoá categories
   await prisma.categories.deleteMany(); // reset trước
 
+  // 3. Seed lại categories
   await prisma.categories.createMany({
     data: [
       {
@@ -159,15 +168,13 @@ async function main() {
     data: {
       id: goalId,
       user_id: user.id,
-      type: 'week',
+      type: 'weekly',
       title: 'Read 3 chapters of a book',
       description: 'Improve knowledge and consistency',
-      progress: 0,
-      status: 'in_progress',
-      due_date: new Date('2025-12-31'),
-      remind_time: new Date('2025-01-01T07:30:00Z'),
       created_at: new Date(),
       updated_at: new Date(),
+      start_date: new Date(),
+      end_date: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000), // one week later
     },
   });
 
