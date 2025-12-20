@@ -16,6 +16,7 @@ import {
   MarketContext,
 } from '../type/market.type';
 import { Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class CycleService {
@@ -42,6 +43,9 @@ export class CycleService {
         },
       });
       cycleId = cycle.id;
+      if (!cycleId) {
+        throw new Error('Failed to create cycle: cycle ID is undefined');
+      }
       this.logger.log(`Cycle ${cycleId} started`);
 
       // Crawl raw data
@@ -147,7 +151,7 @@ export class CycleService {
             source: this.mapSourceToRawSource(data.source),
             data_type: 'market',
             asset_hint: data.asset,
-            payload: data as unknown as Prisma.JsonObject,
+            payload: data as unknown as Prisma.InputJsonValue,
             checksum: this.generateChecksum(data),
           },
         });
@@ -201,7 +205,7 @@ export class CycleService {
             raw_id: rawId,
             asset_code: assetCode,
             asset_type: assetType,
-            value: new Prisma.Decimal(data.value),
+            value: new Decimal(data.value),
             unit: this.getUnitForAsset(data.asset),
             effective_at: new Date(data.date),
             source: this.getSourceFromNormalized(data),
@@ -290,7 +294,7 @@ export class CycleService {
       data: {
         cycle_id: cycleId,
         context: context.context.toLowerCase(),
-        confidence: new Prisma.Decimal(context.confidence),
+        confidence: new Decimal(context.confidence),
         horizon: this.mapSeverityToHorizon(context.severity),
         summary: `Market context: ${context.context}, severity: ${context.severity}, confidence: ${context.confidence}`,
         signal_refs: signalIds,
