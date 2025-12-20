@@ -83,6 +83,15 @@ export class GoalsService {
   async create(userId: string, dto: CreateGoalDto) {
     this.validateGoalDates(dto);
 
+    // Verify user exists before creating goal
+    const userExists = await this.prisma.users.findUnique({
+      where: { id: userId },
+    });
+
+    if (!userExists) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+
     return this.prisma.user_goals.create({
       data: {
         user_id: userId,
