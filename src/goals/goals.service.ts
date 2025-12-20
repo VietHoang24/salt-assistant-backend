@@ -8,13 +8,24 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import dayjs from 'dayjs';
+import isoWeek from 'dayjs/plugin/isoWeek';
+
+dayjs.extend(isoWeek);
 
 @Injectable()
 export class GoalsService {
   constructor(private prisma: PrismaService) {}
 
   private getWeekOfMonth(date: dayjs.Dayjs) {
-    return Math.ceil(date.date() / 7);
+    const dayOfMonth = date.date(); // ngày trong tháng
+    const startOfMonth = date.startOf('month');
+
+    // day(): 0 = Chủ Nhật, 1 = Thứ 2, ... 6 = Thứ 7
+    // Đổi hệ: Monday = 0, Sunday = 6
+    const startDay = (startOfMonth.day() + 6) % 7;
+
+    // công thức tính tuần
+    return Math.ceil((dayOfMonth + startDay) / 7);
   }
 
   private validateGoalDates(dto: {

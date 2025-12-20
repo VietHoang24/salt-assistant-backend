@@ -183,3 +183,134 @@ model error_logs {
   data_snapshot Json?
   created_at    DateTime @db.Timestamptz
 }
+
+
+model cycles {
+  id          String   @id @default(uuid())
+  type        String   @default("daily") // daily, manual
+  status      String   // running | success | failed
+  note        String?
+
+  started_at   DateTime @default(now())
+  finished_at  DateTime?
+
+  raw_data     raw_data[]
+  normalized  normalized_data[]
+  signals     signals[]
+  intelligence intelligence[]
+  ai_context_analysis ai_context_analysis[]
+
+  @@index([status])
+}
+
+model raw_data {
+  id        String   @id @default(uuid())
+  cycle_id  String
+  cycle    cycles    @relation(fields: [cycle_id], references: [id])
+
+  source    String   // investing, sbv, gov...
+  data_type  String   // market, policy, news
+  asset_hint String?  // USD, GOLD, SBV_POLICY
+
+  payload   Json
+  checksum  String?
+
+  fetched_at DateTime @default(now())
+
+  normalized normalized_data[]
+
+  @@index([cycle_id])
+  @@index([source])
+  @@index([data_type])
+}
+
+model normalized_data {
+  id        String   @id @default(uuid())
+  cycle_id  String
+  cycle    cycles    @relation(fields: [cycle_id], references: [id])
+
+  asset_code String   // USDVND, XAUUSD, SBV_RR
+  asset_type String   // fx, gold, policy
+
+  value     Decimal?
+  unit      String?  // %, vnd, boolean, text
+
+  effective_at DateTime
+  source      String?
+
+  normalize_version String
+  raw_id      String
+  raw        raw_data @relation(fields: [raw_id], references: [id])
+
+  @@index([asset_code, effective_at])
+  @@index([cycle_id])
+}
+
+model signals {
+  id        String   @id @default(uuid())
+  cycle_id  String
+  cycle    cycles    @relation(fields: [cycle_id], references: [id])
+
+  signal_type String  // price_up, policy_tighten
+  asset_code  String?
+  direction  String? // up | down | neutral
+  strength   Int?
+
+  detected_at DateTime @default(now())
+
+  based_on_ids String[] // NormalizedData IDs
+  note       String?
+
+  intelligence intelligence[] @relation("SignalToIntelligence")
+
+  @@index([cycle_id])
+  @@index([signal_type])
+}
+
+model intelligence {
+  id        String   @id @default(uuid())
+  cycle_id  String
+  cycle    cycles    @relation(fields: [cycle_id], references: [id])
+
+  context   String   // risk_off, inflation_risk
+  confidence Decimal?
+
+  horizon   String?  // short, mid, long
+  summary   String
+
+  signal_refs String[] // Signal IDs
+
+  created_at DateTime @default(now())
+
+  signals signals[] @relation("SignalToIntelligence")
+  notifications notifications[]
+
+  @@index([context])
+  @@index([cycle_id])
+}
+
+model notifications {
+  id              String   @id @default(uuid())
+  intelligence_id  String
+  intelligence    intelligence @relation(fields: [intelligence_id], references: [id])
+
+  channel   String   // telegram, email
+  receiver  String   // chat_id, email
+
+  status    String   // success, failed
+  error     String?
+
+  sent_at    DateTime?
+}
+
+model ai_context_analysis {
+  id        String   @id @default(uuid())
+  cycle_id  String
+  cycle    cycles    @relation(fields: [cycle_id], references: [id])
+
+  input_snapshot Json    // signals + market snapshot
+  output        Json    // suggested contexts
+  model         String
+  confidence    Decimal?
+  created_at     DateTime @default(now())
+}

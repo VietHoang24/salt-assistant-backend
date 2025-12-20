@@ -8,9 +8,33 @@ import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { GoalsModule } from './goals/goals.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { ScheduleModule } from '@nestjs/schedule';
+import { MarketModule } from './modules/market/market.module';
+import { CycleModule } from './cycle/cycle.module';
+import { CrawlModule } from './crawl/crawl.module';
+import { NormalizeModule } from './normalize/normalize.module';
+import { SignalsModule } from './signals/signals.module';
+import { IntelligenceModule } from './intelligence/intelligence.module';
+import { NotificationModule } from './notification/notification.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
-  imports: [UsersModule, PrismaModule, AuthModule, JwtModule, GoalsModule],
+  imports: [
+    UsersModule,
+    PrismaModule,
+    AuthModule,
+    JwtModule,
+    GoalsModule,
+    ScheduleModule.forRoot(),
+    MarketModule,
+    CycleModule,
+    CrawlModule,
+    NormalizeModule,
+    SignalsModule,
+    IntelligenceModule,
+    NotificationModule,
+    SchedulerModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
