@@ -1,5 +1,15 @@
-version: '3.8'
 services:
+  api:
+    build: .
+    container_name: salt_assistant_api
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+
   postgres:
     image: postgres:15
     container_name: my_postgres
@@ -8,9 +18,8 @@ services:
       POSTGRES_USER: viet
       POSTGRES_PASSWORD: secret
       POSTGRES_DB: myappdb
-      TZ: Asia/Ho_Chi_Minh 
-
+      TZ: Asia/Ho_Chi_Minh
     ports:
-      - "5432:5432"
+      - "5432:5432"   # ⚠️ có thể bỏ nếu không cần truy cập ngoài
     volumes:
       - ./data/db:/var/lib/postgresql/data
