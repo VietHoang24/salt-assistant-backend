@@ -21,9 +21,19 @@ export class DailyCycleScheduler {
     private readonly telegramService: TelegramService,
   ) {}
 
-  @Cron('*/5 * * * *')
-  async handleDailyCycle() {
-    this.logger.log('🌅 Starting daily cycle (every minute)...');
+  @Cron('0 7 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  async handleMorningCycle() {
+    this.logger.log('🌅 Starting morning cycle at 7:00 AM...');
+    await this.runCycle();
+  }
+
+  @Cron('0 22 * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  async handleEveningCycle() {
+    this.logger.log('🌙 Starting evening cycle at 10:00 PM...');
+    await this.runCycle();
+  }
+
+  private async runCycle() {
 
     try {
       // Chạy cycle để crawl và xử lý dữ liệu thị trường
