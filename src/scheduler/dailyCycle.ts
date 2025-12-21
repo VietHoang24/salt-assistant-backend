@@ -54,20 +54,8 @@ export class DailyCycleScheduler {
         return;
       }
 
-      // TODO: In the future, get all users with enable_notif = true
-      // Currently hardcoded for testing with specific userId
-      const testUserId = '31c7700c-39e1-4f82-82cb-fe70a815f15e';
-      const users = await this.prisma.users.findMany({
-        where: {
-          id: testUserId,
-        //   user_configs: {
-        //     enable_notif: true,
-        //   },
-        },
-        // include: {
-        //   user_configs: true,
-        // },
-      });
+      // Lấy tất cả users
+      const users = await this.prisma.users.findMany();
 
       // TODO: In the future, use user.telegram_chat_id instead of TELEGRAM_TEST_CHAT_ID
       const testChatId = process.env.TELEGRAM_TEST_CHAT_ID;
