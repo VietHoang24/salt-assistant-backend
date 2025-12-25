@@ -17,6 +17,7 @@ import { SignalsModule } from './signals/signals.module';
 import { IntelligenceModule } from './intelligence/intelligence.module';
 import { NotificationModule } from './notification/notification.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { TelegramModule } from './modules/telegram/telegram.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     IntelligenceModule,
     NotificationModule,
     SchedulerModule,
+    TelegramModule,
   ],
   controllers: [AppController],
   providers: [
