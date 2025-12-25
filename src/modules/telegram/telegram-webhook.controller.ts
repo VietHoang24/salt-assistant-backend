@@ -18,13 +18,13 @@ export class TelegramWebhookController {
     @Body() body: any,
   ) {
     // Verify secret token
-    console.log('secret', secret);
     console.log('body', body);
+    console.log('secret', secret);
     console.log(
-      'process.env.TELEGRAM_BOT_TOKEN',
-      process.env.TELEGRAM_BOT_TOKEN,
+      'process.env.TELEGRAM_SECRETE_BOT_TOKEN',
+      process.env.TELEGRAM_SECRETE_BOT_TOKEN,
     );
-    if (secret !== process.env.TELEGRAM_BOT_TOKEN) {
+    if (secret !== process.env.TELEGRAM_SECRETE_BOT_TOKEN) {
       return res.sendStatus(403);
     }
 
