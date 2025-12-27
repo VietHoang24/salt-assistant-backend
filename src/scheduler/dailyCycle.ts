@@ -45,30 +45,30 @@ export class DailyCycleScheduler {
       // Chạy cycle để crawl và xử lý dữ liệu thị trường
       await this.cycleService.runCycle('daily');
 
-      // // Lấy cycle mới nhất vừa chạy
-      // const latestCycle = await this.prisma.cycles.findFirst({
-      //   where: { status: 'success', type: 'daily' },
-      //   orderBy: { started_at: 'desc' },
-      //   include: {
-      //     normalized: {
-      //       orderBy: { effective_at: 'desc' },
-      //       take: 10,
-      //     },
-      //     signals: {
-      //       orderBy: { detected_at: 'desc' },
-      //       take: 10,
-      //     },
-      //     intelligence: {
-      //       orderBy: { created_at: 'desc' },
-      //       take: 1,
-      //     },
-      //   },
-      // });
+      // Lấy cycle mới nhất vừa chạy
+      const latestCycle = await this.prisma.cycles.findFirst({
+        where: { status: 'success', type: 'daily' },
+        orderBy: { started_at: 'desc' },
+        include: {
+          normalized: {
+            orderBy: { effective_at: 'desc' },
+            take: 10,
+          },
+          signals: {
+            orderBy: { detected_at: 'desc' },
+            take: 10,
+          },
+          intelligence: {
+            orderBy: { created_at: 'desc' },
+            take: 1,
+          },
+        },
+      });
 
-      // if (!latestCycle) {
-      //   this.logger.warn('No successful cycle found, skipping notifications');
-      //   return;
-      // }
+      if (!latestCycle) {
+        this.logger.warn('No successful cycle found, skipping notifications');
+        return;
+      }
 
       // Lấy chỉ users có telegram_chat_id
       const users = await this.prisma.users.findMany({
