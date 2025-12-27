@@ -17,7 +17,7 @@ export class UsersController {
     if (!userProfile) {
       throw new NotFoundException('User not found');
     }
-    const { avatar_url, full_name, email, id } = userProfile;
-    return { avatar_url, full_name, email, id };
+    const { avatar_url, full_name, email, id, telegram_chat_id } = userProfile;
+    return { avatar_url, full_name, email, id, telegram_chat_id };
   }
 }
