@@ -21,13 +21,13 @@ async function bootstrap() {
   // Configure CORS with proper options for credentials
   if (allowed.length > 0) {
     app.enableCors({
-      origin: allowed, // Use ALLOWED_ORIGINS directly
+      origin: true, // Use ALLOWED_ORIGINS directly
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
       exposedHeaders: ['Authorization'],
       optionsSuccessStatus: 204, // Important for preflight
-      preflightContinue: false, // Don't continue to next middleware after preflight
+      preflightContinue: true, // Don't continue to next middleware after preflight
     });
   } else {
     // In development, allow all origins if no config provided
