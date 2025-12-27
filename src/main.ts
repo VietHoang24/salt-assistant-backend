@@ -1,6 +1,7 @@
 ﻿import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,6 +16,8 @@ async function bootstrap() {
     .map((s) => s.replace(/\/+$/, ''));
 
   console.log('allowed origins', allowed);
+
+  // Configure CORS FIRST before any other middleware
   // Configure CORS with proper options for credentials
   if (allowed.length > 0) {
     app.enableCors({
@@ -24,6 +27,7 @@ async function bootstrap() {
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
       exposedHeaders: ['Authorization'],
       optionsSuccessStatus: 204, // Important for preflight
+      preflightContinue: false, // Don't continue to next middleware after preflight
     });
   } else {
     // In development, allow all origins if no config provided
@@ -36,12 +40,25 @@ async function bootstrap() {
         allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
         exposedHeaders: ['Authorization'],
         optionsSuccessStatus: 204, // Important for preflight
+        preflightContinue: false, // Don't continue to next middleware after preflight
       });
     } else {
       // In production, disable CORS if no origins specified (security)
       app.enableCors({ origin: false });
     }
   }
+
+  // Handle OPTIONS requests explicitly to prevent redirects
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.method === 'OPTIONS') {
+      // CORS middleware should have already handled this, but ensure we don't continue
+      if (!res.headersSent) {
+        res.status(204).end();
+      }
+      return;
+    }
+    next();
+  });
 
   // Configure global pipes BEFORE listening
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
