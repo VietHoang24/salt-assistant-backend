@@ -1,7 +1,6 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -12,14 +11,13 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get(':id')
-  getUser(@Param('id') id: string) {
-    return this.usersService.findOne(id);
-  }
   @Get('me')
-  @UseGuards(AuthGuard('jwt'))
-  me(@Req() req: Request & { user?: any }) {
-    console.log('req.user', req.user);
-    return req.user;
+  async me(@CurrentUser() user: { sub: string; email: string | null }) {
+    const userProfile = await this.usersService.findOne(user.sub);
+    if (!userProfile) {
+      throw new NotFoundException('User not found');
+    }
+    const { avatar_url, full_name, email, id } = userProfile;
+    return { avatar_url, full_name, email, id };
   }
 }
