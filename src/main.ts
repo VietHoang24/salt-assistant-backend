@@ -23,6 +23,7 @@ async function bootstrap() {
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
       exposedHeaders: ['Authorization'],
+      optionsSuccessStatus: 204, // Important for preflight
     });
   } else {
     // In development, allow all origins if no config provided
@@ -34,6 +35,7 @@ async function bootstrap() {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
         exposedHeaders: ['Authorization'],
+        optionsSuccessStatus: 204, // Important for preflight
       });
     } else {
       // In production, disable CORS if no origins specified (security)
