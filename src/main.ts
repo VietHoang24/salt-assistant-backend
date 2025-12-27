@@ -14,19 +14,11 @@ async function bootstrap() {
     .filter(Boolean)
     .map((s) => s.replace(/\/+$/, ''));
 
+  console.log('allowed origins', allowed);
   // Configure CORS with proper options for credentials
   if (allowed.length > 0) {
     app.enableCors({
-      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-        // Allow requests with no origin (like mobile apps, Postman, etc.)
-        if (!origin) return callback(null, true);
-
-        if (allowed.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'));
-        }
-      },
+      origin: allowed, // Use ALLOWED_ORIGINS directly
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
