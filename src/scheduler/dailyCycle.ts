@@ -33,48 +33,71 @@ export class DailyCycleScheduler {
     await this.runCycle();
   }
 
-  private async runCycle() {
+  // write run every 1 minute
+  @Cron('* * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  async handleEveryMinuteCycle() {
+    this.logger.log('🔄 Running cycle every 1 minute...');
+    await this.runCycle();
+  }
 
+  private async runCycle() {
     try {
       // Chạy cycle để crawl và xử lý dữ liệu thị trường
       await this.cycleService.runCycle('daily');
 
-      // Lấy cycle mới nhất vừa chạy
-      const latestCycle = await this.prisma.cycles.findFirst({
-        where: { status: 'success', type: 'daily' },
-        orderBy: { started_at: 'desc' },
-        include: {
-          normalized: {
-            orderBy: { effective_at: 'desc' },
-            take: 10,
-          },
-          signals: {
-            orderBy: { detected_at: 'desc' },
-            take: 10,
-          },
-          intelligence: {
-            orderBy: { created_at: 'desc' },
-            take: 1,
+      // // Lấy cycle mới nhất vừa chạy
+      // const latestCycle = await this.prisma.cycles.findFirst({
+      //   where: { status: 'success', type: 'daily' },
+      //   orderBy: { started_at: 'desc' },
+      //   include: {
+      //     normalized: {
+      //       orderBy: { effective_at: 'desc' },
+      //       take: 10,
+      //     },
+      //     signals: {
+      //       orderBy: { detected_at: 'desc' },
+      //       take: 10,
+      //     },
+      //     intelligence: {
+      //       orderBy: { created_at: 'desc' },
+      //       take: 1,
+      //     },
+      //   },
+      // });
+
+      // if (!latestCycle) {
+      //   this.logger.warn('No successful cycle found, skipping notifications');
+      //   return;
+      // }
+
+      // Lấy chỉ users có telegram_chat_id
+      const users = await this.prisma.users.findMany({
+        where: {
+          telegram_chat_id: {
+            not: null,
           },
         },
       });
 
-      if (!latestCycle) {
-        this.logger.warn('No successful cycle found, skipping notifications');
+      if (users.length === 0) {
+        this.logger.warn(
+          'No users with telegram_chat_id found, skipping notifications',
+        );
         return;
       }
-
-      // Lấy tất cả users
-      const users = await this.prisma.users.findMany();
 
       // TODO: In the future, use user.telegram_chat_id instead of TELEGRAM_TEST_CHAT_ID
       const testChatId = process.env.TELEGRAM_TEST_CHAT_ID;
       if (!testChatId) {
-        this.logger.warn('TELEGRAM_TEST_CHAT_ID not set, skipping notifications');
+        this.logger.warn(
+          'TELEGRAM_TEST_CHAT_ID not set, skipping notifications',
+        );
         return;
       }
 
-      this.logger.log(`Found ${users.length} users to notify (using test chat ID)`);
+      this.logger.log(
+        `Found ${users.length} users to notify (using test chat ID)`,
+      );
 
       // Gửi thông báo cho từng user
       for (const user of users) {
@@ -90,7 +113,7 @@ export class DailyCycleScheduler {
             `❌ Failed to send notification to user ${user.id}:`,
             error,
           );
-          
+
           // Lưu lỗi vào notification_logs
           await this.prisma.notification_logs.create({
             data: {
@@ -215,7 +238,7 @@ export class DailyCycleScheduler {
     // Gửi qua Telegram
     try {
       await this.telegramService.sendMessage(telegramChatId, messageText);
-      
+
       // Lưu vào notification_logs với status success
       await this.prisma.notification_logs.create({
         data: {
