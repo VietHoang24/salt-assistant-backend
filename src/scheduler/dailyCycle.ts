@@ -88,15 +88,6 @@ export class DailyCycleScheduler {
         return;
       }
 
-      // TODO: In the future, use user.telegram_chat_id instead of TELEGRAM_TEST_CHAT_ID
-      const testChatId = process.env.TELEGRAM_TEST_CHAT_ID;
-      if (!testChatId) {
-        this.logger.warn(
-          'TELEGRAM_TEST_CHAT_ID not set, skipping notifications',
-        );
-        return;
-      }
-
       this.logger.log(
         `Found ${users.length} users to notify (using test chat ID)`,
       );
@@ -104,9 +95,15 @@ export class DailyCycleScheduler {
       // Gửi thông báo cho từng user
       for (const user of users) {
         try {
+          if (!user.telegram_chat_id) {
+            this.logger.warn(
+              `User ${user.id} has no telegram_chat_id, skipping notification`,
+            );
+            continue;
+          }
           await this.sendMarketNotificationToUser(
             user.id,
-            testChatId,
+            user.telegram_chat_id,
             latestCycle,
           );
           this.logger.log(`✅ Notification sent to user ${user.id}`);
