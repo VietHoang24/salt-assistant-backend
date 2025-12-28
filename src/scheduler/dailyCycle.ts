@@ -33,13 +33,6 @@ export class DailyCycleScheduler {
     await this.runCycle();
   }
 
-  //run every 1 minute
-  @Cron('* * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
-  async handleEveryMinute() {
-    this.logger.log('🌙 Starting every minute cycle...');
-    await this.runCycle();
-  }
-
   private async runCycle() {
     try {
       // Chạy cycle để crawl và xử lý dữ liệu thị trường
