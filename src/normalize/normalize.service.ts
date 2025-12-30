@@ -9,6 +9,7 @@ export class NormalizeService {
         asset: d.asset,
         date: new Date(d.date).toISOString(),
         value: Number(d.value),
+        source: d.source, // Preserve source to distinguish buy/sell for GOLD
       };
 
       // Extract coin type from source for CRYPTO assets

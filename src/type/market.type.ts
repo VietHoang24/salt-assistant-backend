@@ -13,6 +13,7 @@ export interface NormalizedMarketData {
   date: string; // ISO
   value: number;
   coinType?: string; // 'BTC' | 'ETH' for CRYPTO asset
+  source?: string; // Preserve source for matching (e.g., 'BTMC' vs 'BTMC_SELL' for GOLD)
 }
 
 export interface MarketSignal {

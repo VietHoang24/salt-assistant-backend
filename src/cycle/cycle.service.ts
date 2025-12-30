@@ -10,6 +10,7 @@ import { SignalsService } from '../signals/signals.service';
 import { IntelligenceService } from '../intelligence/intelligence.service';
 import { NotificationService } from '../notification/notification.service';
 import {
+  Asset,
   RawMarketData,
   NormalizedMarketData,
   MarketSignal,
@@ -80,10 +81,21 @@ export class CycleService {
         rawData,
         rawDataMap,
       );
-      this.logger.log(`Saved ${normalizedDataMap.size} normalized data records`);
+      this.logger.log(
+        `Saved ${normalizedDataMap.size} normalized data records`,
+      );
 
-      // Generate signals
-      const signals = this.signalsService.generateSignals(normalizedData);
+      // Get previous cycle's normalized data for comparison
+      const previousNormalizedData = await this.getPreviousNormalizedData(type);
+      this.logger.log(
+        `Found ${previousNormalizedData.length} previous normalized data items for comparison`,
+      );
+
+      // Generate signals with previous data for comparison
+      const signals = this.signalsService.generateSignals(
+        normalizedData,
+        previousNormalizedData,
+      );
       this.logger.log(`Generated ${signals.length} signals`);
 
       // Lưu signals vào database với mapping chính xác
@@ -196,7 +208,13 @@ export class CycleService {
           );
         }
 
-        const assetCode = this.mapAssetToAssetCode(data.asset, data.coinType);
+        // Use rawDataItem source to distinguish buy/sell for GOLD
+        const source = rawDataItem?.source || '';
+        const assetCode = this.mapAssetToAssetCode(
+          data.asset,
+          data.coinType,
+          source,
+        );
         const assetType = this.mapAssetToAssetType(data.asset);
 
         const record = await this.prisma.normalized_data.create({
@@ -213,11 +231,18 @@ export class CycleService {
           },
         });
 
-        // Tạo key để map: asset_coinType hoặc asset
-        const key =
-          data.asset === 'CRYPTO' && data.coinType
-            ? `${data.asset}_${data.coinType}`
-            : data.asset;
+        // Tạo key để map: asset_coinType hoặc asset_source (for GOLD buy/sell)
+        let key: string;
+        if (data.asset === 'CRYPTO' && data.coinType) {
+          key = `${data.asset}_${data.coinType}`;
+        } else if (data.asset === 'GOLD' && rawDataItem?.source) {
+          // Phân biệt buy/sell cho GOLD qua source
+          key = rawDataItem.source.includes('SELL')
+            ? `${data.asset}_SELL`
+            : `${data.asset}_BUY`;
+        } else {
+          key = data.asset;
+        }
         normalizedDataMap.set(key, record.id);
 
         return record;
@@ -240,11 +265,23 @@ export class CycleService {
         let normalizedId: string | undefined;
 
         if (normalizedDataItem) {
-          const key =
+          let key: string;
+          if (
             normalizedDataItem.asset === 'CRYPTO' &&
             normalizedDataItem.coinType
-              ? `${normalizedDataItem.asset}_${normalizedDataItem.coinType}`
-              : normalizedDataItem.asset;
+          ) {
+            key = `${normalizedDataItem.asset}_${normalizedDataItem.coinType}`;
+          } else if (
+            normalizedDataItem.asset === 'GOLD' &&
+            normalizedDataItem.source
+          ) {
+            // Match buy/sell for GOLD via source
+            key = normalizedDataItem.source.includes('SELL')
+              ? `${normalizedDataItem.asset}_SELL`
+              : `${normalizedDataItem.asset}_BUY`;
+          } else {
+            key = normalizedDataItem.asset;
+          }
           normalizedId = normalizedDataMap.get(key);
         }
 
@@ -324,9 +361,19 @@ export class CycleService {
     return 'unknown';
   }
 
-  private mapAssetToAssetCode(asset: string, coinType?: string): string {
+  private mapAssetToAssetCode(
+    asset: string,
+    coinType?: string,
+    source?: string,
+  ): string {
     if (asset === 'USD') return 'USDVND';
-    if (asset === 'GOLD') return 'XAUUSD';
+    if (asset === 'GOLD') {
+      // Phân biệt giá mua và giá bán qua source
+      if (source?.includes('SELL') || source === 'BTMC_SELL') {
+        return 'XAUUSD_SELL';
+      }
+      return 'XAUUSD_BUY';
+    }
     if (asset === 'CRYPTO' && coinType === 'BTC') return 'BTCUSD';
     if (asset === 'CRYPTO' && coinType === 'ETH') return 'ETHUSD';
     if (asset === 'STOCK') return 'VNINDEX';
@@ -365,6 +412,74 @@ export class CycleService {
     if (severity === 'HIGH') return 'short';
     if (severity === 'MEDIUM') return 'mid';
     return 'long';
+  }
+
+  private async getPreviousNormalizedData(
+    type: string,
+  ): Promise<NormalizedMarketData[]> {
+    // Find the most recent successful cycle before current one
+    const previousCycle = await this.prisma.cycles.findFirst({
+      where: {
+        type,
+        status: 'success',
+      },
+      orderBy: {
+        finished_at: 'desc',
+      },
+      include: {
+        normalized: {
+          orderBy: {
+            effective_at: 'desc',
+          },
+        },
+      },
+    });
+
+    if (!previousCycle || previousCycle.normalized.length === 0) {
+      this.logger.warn(
+        'No previous cycle found, will calculate signals without comparison',
+      );
+      return [];
+    }
+
+    // Convert database format to NormalizedMarketData format
+    return previousCycle.normalized.map((nd) => {
+      const assetInfo = this.mapAssetCodeToAsset(nd.asset_code);
+      // Reconstruct source from asset_code for GOLD to preserve buy/sell info
+      let source = nd.source || undefined;
+      if (assetInfo.asset === 'GOLD') {
+        source = nd.asset_code.includes('SELL') ? 'BTMC_SELL' : 'BTMC';
+      }
+      return {
+        asset: assetInfo.asset,
+        date: nd.effective_at.toISOString(),
+        value: nd.value ? Number(nd.value) : 0,
+        coinType: assetInfo.coinType,
+        source,
+      };
+    });
+  }
+
+  private mapAssetCodeToAsset(assetCode: string): {
+    asset: Asset;
+    coinType?: string;
+  } {
+    if (assetCode === 'USDVND') return { asset: 'USD' };
+    if (assetCode === 'XAUUSD_BUY' || assetCode === 'XAUUSD_SELL')
+      return { asset: 'GOLD' };
+    // Legacy support for old XAUUSD without _BUY/_SELL
+    if (assetCode === 'XAUUSD') return { asset: 'GOLD' };
+    if (assetCode === 'VNINDEX') return { asset: 'STOCK' };
+    if (assetCode === 'BTCUSD') return { asset: 'CRYPTO', coinType: 'BTC' };
+    if (assetCode === 'ETHUSD') return { asset: 'CRYPTO', coinType: 'ETH' };
+    // Default fallback
+    if (assetCode.includes('USD') && !assetCode.includes('XAU'))
+      return { asset: 'USD' };
+    if (assetCode.includes('GOLD') || assetCode.includes('XAU'))
+      return { asset: 'GOLD' };
+    if (assetCode.includes('BTC')) return { asset: 'CRYPTO', coinType: 'BTC' };
+    if (assetCode.includes('ETH')) return { asset: 'CRYPTO', coinType: 'ETH' };
+    return { asset: 'STOCK' };
   }
 
   private generateChecksum(data: RawMarketData): string {

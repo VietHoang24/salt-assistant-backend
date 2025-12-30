@@ -18,6 +18,7 @@ import { IntelligenceModule } from './intelligence/intelligence.module';
 import { NotificationModule } from './notification/notification.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
+import { DailyQuoteModule } from './modules/daily-quote/daily-quote.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { TelegramModule } from './modules/telegram/telegram.module';
     NotificationModule,
     SchedulerModule,
     TelegramModule,
+    DailyQuoteModule,
   ],
   controllers: [AppController],
   providers: [
