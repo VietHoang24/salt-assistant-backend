@@ -358,6 +358,9 @@ export class CycleService {
     if (source.includes('VIETCOMBANK')) return 'vietcombank';
     if (source.includes('COINGECKO')) return 'coingecko';
     if (source.includes('VNDIRECT')) return 'vndirect';
+    if (source.includes('MOCK_OIL')) return 'mock_oil';
+    if (source.includes('MOCK_INTERNATIONAL_GOLD'))
+      return 'mock_international_gold';
     return 'unknown';
   }
 
@@ -377,6 +380,8 @@ export class CycleService {
     if (asset === 'CRYPTO' && coinType === 'BTC') return 'BTCUSD';
     if (asset === 'CRYPTO' && coinType === 'ETH') return 'ETHUSD';
     if (asset === 'STOCK') return 'VNINDEX';
+    if (asset === 'OIL') return 'OILUSD';
+    if (asset === 'INTERNATIONAL_GOLD') return 'XAUUSD_INTL';
     return asset;
   }
 
@@ -385,6 +390,8 @@ export class CycleService {
     if (asset === 'GOLD') return 'gold';
     if (asset === 'CRYPTO') return 'crypto';
     if (asset === 'STOCK') return 'stock';
+    if (asset === 'OIL') return 'commodity';
+    if (asset === 'INTERNATIONAL_GOLD') return 'gold';
     return 'unknown';
   }
 
@@ -392,6 +399,8 @@ export class CycleService {
     if (asset === 'USD' || asset === 'GOLD') return 'vnd';
     if (asset === 'CRYPTO') return 'usd';
     if (asset === 'STOCK') return 'point';
+    if (asset === 'OIL') return 'usd';
+    if (asset === 'INTERNATIONAL_GOLD') return 'usd';
     return 'unknown';
   }
 
@@ -467,16 +476,27 @@ export class CycleService {
     if (assetCode === 'USDVND') return { asset: 'USD' };
     if (assetCode === 'XAUUSD_BUY' || assetCode === 'XAUUSD_SELL')
       return { asset: 'GOLD' };
+    if (assetCode === 'XAUUSD_INTL') return { asset: 'INTERNATIONAL_GOLD' };
     // Legacy support for old XAUUSD without _BUY/_SELL
     if (assetCode === 'XAUUSD') return { asset: 'GOLD' };
     if (assetCode === 'VNINDEX') return { asset: 'STOCK' };
     if (assetCode === 'BTCUSD') return { asset: 'CRYPTO', coinType: 'BTC' };
     if (assetCode === 'ETHUSD') return { asset: 'CRYPTO', coinType: 'ETH' };
+    if (assetCode === 'OILUSD') return { asset: 'OIL' };
     // Default fallback
-    if (assetCode.includes('USD') && !assetCode.includes('XAU'))
+    if (
+      assetCode.includes('USD') &&
+      !assetCode.includes('XAU') &&
+      !assetCode.includes('OIL')
+    )
       return { asset: 'USD' };
-    if (assetCode.includes('GOLD') || assetCode.includes('XAU'))
+    if (
+      assetCode.includes('GOLD') ||
+      (assetCode.includes('XAU') && !assetCode.includes('INTL'))
+    )
       return { asset: 'GOLD' };
+    if (assetCode.includes('INTL')) return { asset: 'INTERNATIONAL_GOLD' };
+    if (assetCode.includes('OIL')) return { asset: 'OIL' };
     if (assetCode.includes('BTC')) return { asset: 'CRYPTO', coinType: 'BTC' };
     if (assetCode.includes('ETH')) return { asset: 'CRYPTO', coinType: 'ETH' };
     return { asset: 'STOCK' };

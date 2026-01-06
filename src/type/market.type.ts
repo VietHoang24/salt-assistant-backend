@@ -1,4 +1,10 @@
-export type Asset = 'GOLD' | 'USD' | 'STOCK' | 'CRYPTO';
+export type Asset =
+  | 'GOLD'
+  | 'USD'
+  | 'STOCK'
+  | 'CRYPTO'
+  | 'OIL'
+  | 'INTERNATIONAL_GOLD';
 
 export interface RawMarketData {
   asset: Asset;

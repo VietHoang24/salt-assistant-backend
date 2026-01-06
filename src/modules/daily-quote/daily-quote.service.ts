@@ -14,26 +14,25 @@ export class DailyQuoteService {
   ) {}
 
   /**
-   * Get today's quote, generate if not exists
+   * Get today's quote for a specific user, generate if not exists
    */
-  async getTodayQuote(): Promise<DailyQuoteResponse> {
+  async getTodayQuoteForUser(userId: string): Promise<DailyQuoteResponse> {
     try {
-      // Try to get existing quote for today
-      const existing = await this.repository.getTodayQuote();
+      // Try to get existing user-specific quote for today
+      const existing = await this.repository.getTodayQuoteForUser(userId);
 
       if (existing) {
         return this.mapToResponse(existing);
       }
 
       // Generate new quote if not exists
-      this.logger.log('Generating new daily quote...');
+      this.logger.log(`Generating new daily quote for user ${userId}...`);
       const generated = await this.openaiService.generateDailyQuote();
 
-      // Save to database
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const saved = await this.repository.create({
+      const saved = await this.repository.create(userId, {
         content: generated.content,
         author: generated.author,
         date: today,
@@ -41,22 +40,25 @@ export class DailyQuoteService {
 
       return this.mapToResponse(saved);
     } catch (error) {
-      this.logger.error('Failed to get today quote', error);
+      this.logger.error(`Failed to get today quote for user ${userId}`, error);
       throw error;
     }
   }
 
   /**
-   * Generate and save a new quote for today
+   * Generate and save a new quote for a specific user
    */
-  async generateNewQuote(context?: string): Promise<DailyQuoteResponse> {
+  async generateNewQuote(
+    userId: string,
+    context?: string,
+  ): Promise<DailyQuoteResponse> {
     try {
       const generated = await this.openaiService.generateDailyQuote(context);
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const saved = await this.repository.create({
+      const saved = await this.repository.create(userId, {
         content: generated.content,
         author: generated.author,
         date: today,
@@ -64,7 +66,7 @@ export class DailyQuoteService {
 
       return this.mapToResponse(saved);
     } catch (error) {
-      this.logger.error('Failed to generate new quote', error);
+      this.logger.error(`Failed to generate new quote for user ${userId}`, error);
       throw error;
     }
   }
@@ -78,10 +80,10 @@ export class DailyQuoteService {
       content: entity.content,
       author: entity.author,
       date: entity.date instanceof Date ? entity.date.toISOString() : entity.date,
-      createdAt: entity.createdAt
-        ? entity.createdAt instanceof Date
-          ? entity.createdAt.toISOString()
-          : entity.createdAt
+      createdAt: entity.created_at
+        ? entity.created_at instanceof Date
+          ? entity.created_at.toISOString()
+          : entity.created_at
         : undefined,
     };
   }

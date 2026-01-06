@@ -17,6 +17,6 @@ import { TelegramService } from './notification/telegram.service';
     TelegramService,
   ],
   controllers: [MarketController],
-  exports: [TelegramService],
+  exports: [TelegramService, MarketService],
 })
 export class MarketModule {}

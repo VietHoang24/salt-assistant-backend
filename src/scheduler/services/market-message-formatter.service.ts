@@ -43,7 +43,6 @@ export class MarketMessageFormatterService {
     this.addIntelligenceSection(messageLines, cycle.intelligence);
     await this.addWeeklyGoalsSection(messageLines, userId);
     this.addDailyQuoteSection(messageLines, dailyQuote);
-    console.log('dailyQuote', dailyQuote)
     return messageLines.join('\n');
   }
 
@@ -132,13 +131,21 @@ export class MarketMessageFormatterService {
     }
   }
 
-  formatMarketValue(value: any, assetCode: string, unit: string | null): string {
+  formatMarketValue(
+    value: any,
+    assetCode: string,
+    unit: string | null,
+  ): string {
     const numValue =
       typeof value === 'object' && value !== null && 'toNumber' in value
         ? (value as { toNumber: () => number }).toNumber()
         : Number(value);
 
-    if (assetCode.includes('USD') || assetCode.includes('VND')) {
+    if (
+      assetCode.includes('USD') &&
+      !assetCode.includes('XAU') &&
+      !assetCode.includes('OIL')
+    ) {
       return `${numValue.toLocaleString('vi-VN')} ${unit || 'VND'}`;
     }
     if (assetCode.includes('BTC') || assetCode.includes('ETH')) {
@@ -146,6 +153,18 @@ export class MarketMessageFormatterService {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`;
+    }
+    if (assetCode === 'OILUSD' || assetCode.includes('OIL')) {
+      return `$${numValue.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}/barrel`;
+    }
+    if (assetCode === 'XAUUSD_INTL' || assetCode.includes('INTL')) {
+      return `$${numValue.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}/ounce`;
     }
     return `${numValue.toLocaleString('vi-VN')} ${unit || ''}`;
   }
@@ -155,10 +174,14 @@ export class MarketMessageFormatterService {
     if (assetCode === 'USDVND') return 'USD/VND';
     if (assetCode === 'XAUUSD_BUY') return 'Vàng SJC (Mua)';
     if (assetCode === 'XAUUSD_SELL') return 'Vàng SJC (Bán)';
+    if (assetCode === 'XAUUSD_INTL') return 'Vàng thế giới (XAU/USD)';
+    if (assetCode === 'OILUSD') return 'Giá dầu (WTI)';
     // Legacy support
-    if (assetCode.includes('XAUUSD')) return 'Vàng SJC';
+    if (assetCode.includes('XAUUSD') && !assetCode.includes('INTL'))
+      return 'Vàng SJC';
     if (assetCode.includes('BTC')) return 'Bitcoin';
     if (assetCode.includes('ETH')) return 'Ethereum';
+    if (assetCode.includes('OIL')) return 'Giá dầu';
     return assetCode;
   }
 

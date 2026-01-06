@@ -65,19 +65,7 @@ export class MarketNotificationService {
 
     this.logger.log(`Found ${users.length} users to notify`);
 
-    // Get today's daily quote
-    let dailyQuote: DailyQuoteResponse | null = null;
-    try {
-      dailyQuote = await this.dailyQuoteService.getTodayQuote();
-      this.logger.log('✅ Daily quote retrieved for notifications');
-    } catch (error) {
-      this.logger.warn(
-        '⚠️ Failed to get daily quote, continuing without it',
-        error,
-      );
-    }
-
-    // Send notifications to all users with quote
+    // Send notifications to all users with their individual quotes
     for (const user of users) {
       try {
         if (!user.telegram_chat_id) {
@@ -85,6 +73,19 @@ export class MarketNotificationService {
             `User ${user.id} has no telegram_chat_id, skipping notification`,
           );
           continue;
+        }
+
+        // Get today's quote for this specific user
+        let dailyQuote: DailyQuoteResponse | null = null;
+        try {
+          dailyQuote = await this.dailyQuoteService.getTodayQuoteForUser(
+            user.id,
+          );
+        } catch (error) {
+          this.logger.warn(
+            `⚠️ Failed to get daily quote for user ${user.id}, continuing without it`,
+            error,
+          );
         }
 
         await this.sendNotificationToUser(

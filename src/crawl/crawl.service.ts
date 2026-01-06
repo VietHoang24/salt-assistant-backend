@@ -20,12 +20,15 @@ export class CrawlService {
     const today = new Date().toISOString().split('T')[0];
 
     try {
-      const [gold, usd, crypto] = await Promise.allSettled([
-        this.crawlGold(),
-        this.crawlUsdRate(),
-        this.crawlCrypto(),
-        // this.crawlStockIndex(), // Tạm thời tắt crawl chứng khoán
-      ]);
+      const [gold, usd, crypto, oil, internationalGold] =
+        await Promise.allSettled([
+          this.crawlGold(),
+          this.crawlUsdRate(),
+          this.crawlCrypto(),
+          this.crawlOilPrice(),
+          this.crawlInternationalGoldPrice(),
+          // this.crawlStockIndex(), // Tạm thời tắt crawl chứng khoán
+        ]);
 
       if (gold.status === 'fulfilled' && gold.value) {
         results.push({
@@ -73,6 +76,29 @@ export class CrawlService {
             source: 'COINGECKO_ETH',
           });
         }
+      }
+
+      if (oil.status === 'fulfilled' && oil.value) {
+        results.push({
+          asset: 'OIL',
+          date: today,
+          value: oil.value,
+          unit: 'USD',
+          source: 'MOCK_OIL',
+        });
+      }
+
+      if (
+        internationalGold.status === 'fulfilled' &&
+        internationalGold.value
+      ) {
+        results.push({
+          asset: 'INTERNATIONAL_GOLD',
+          date: today,
+          value: internationalGold.value,
+          unit: 'USD',
+          source: 'MOCK_INTERNATIONAL_GOLD',
+        });
       }
 
       // Tạm thời tắt crawl chứng khoán
@@ -243,6 +269,58 @@ export class CrawlService {
     } catch (error) {
       this.logger.error(
         `Error crawling VN-Index: ${this.getErrorMessage(error)}`,
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Mock crawl for oil price (WTI Crude Oil)
+   * Returns a mock price around $75-85 USD per barrel
+   */
+  private async crawlOilPrice(): Promise<number | null> {
+    try {
+      // Mock data: simulate oil price with slight variation
+      // In production, this would call a real API like:
+      // - Alpha Vantage API
+      // - EIA API
+      // - Yahoo Finance API
+      const basePrice = 80;
+      const variation = Math.random() * 10 - 5; // -5 to +5 USD
+      const mockPrice = basePrice + variation;
+
+      this.logger.log(`Mock oil price: $${mockPrice.toFixed(2)}/barrel`);
+      return Number(mockPrice.toFixed(2));
+    } catch (error) {
+      this.logger.error(
+        `Error crawling oil price: ${this.getErrorMessage(error)}`,
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Mock crawl for international gold price (XAU/USD)
+   * Returns a mock price around $2000-2100 USD per ounce
+   */
+  private async crawlInternationalGoldPrice(): Promise<number | null> {
+    try {
+      // Mock data: simulate international gold price with slight variation
+      // In production, this would call a real API like:
+      // - Metals API
+      // - GoldAPI
+      // - Alpha Vantage API
+      const basePrice = 2050;
+      const variation = Math.random() * 100 - 50; // -50 to +50 USD
+      const mockPrice = basePrice + variation;
+
+      this.logger.log(
+        `Mock international gold price: $${mockPrice.toFixed(2)}/ounce`,
+      );
+      return Number(mockPrice.toFixed(2));
+    } catch (error) {
+      this.logger.error(
+        `Error crawling international gold price: ${this.getErrorMessage(error)}`,
       );
       return null;
     }

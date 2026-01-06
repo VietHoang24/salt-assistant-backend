@@ -25,7 +25,18 @@ export class DailyCycleScheduler {
     this.logger.log('🌙 Starting evening cycle at 10:00 PM...');
     await this.runCycle();
   }
-  
+
+  // @Cron('* * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  // async runCycleEveryMinute() {
+  //   try {
+  //     this.logger.log('🌙 Starting every minute cycle...');
+  //     await this.runCycle();
+  //   } catch (error) {
+  //     this.logger.error('❌ Every minute cycle failed:', error);
+  //     throw error;
+  //   }
+  // }
+
   private async runCycle() {
     try {
       // Chạy cycle để crawl và xử lý dữ liệu thị trường

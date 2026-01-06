@@ -21,6 +21,7 @@ model users {
   user_categories    user_categories[]
   user_configs       user_configs?
   user_daily_summary user_daily_summary[]
+  user_daily_quotes  user_daily_quotes[]
   user_goal_logs     user_goal_logs[]
   user_goals         user_goals[]
 }
@@ -95,12 +96,14 @@ model news {
 }
 
 model market_data {
-  id           String   @id @default(uuid())
-  gold_price   Decimal? @db.Decimal
-  btc_price    Decimal? @db.Decimal
-  eth_price    Decimal? @db.Decimal
-  usd_vnd_rate Decimal? @db.Decimal
-  created_at   DateTime @db.Timestamptz(6)
+  id                      String   @id @default(uuid())
+  gold_price              Decimal? @db.Decimal
+  international_gold_price Decimal? @db.Decimal
+  oil_price               Decimal? @db.Decimal
+  btc_price               Decimal? @db.Decimal
+  eth_price               Decimal? @db.Decimal
+  usd_vnd_rate            Decimal? @db.Decimal
+  created_at              DateTime @db.Timestamptz(6)
 }
 
 model ai_daily_summary {
@@ -250,6 +253,21 @@ model ai_context_analysis {
   confidence     Decimal?
   created_at     DateTime @default(now())
   cycle          cycles   @relation(fields: [cycle_id], references: [id])
+}
+
+model user_daily_quotes {
+  id         String   @id @default(uuid())
+  user_id    String
+  content    String
+  author     String?
+  date       DateTime @db.Date
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+  user       users    @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, date])
+  @@index([user_id])
+  @@index([date])
 }
 
 enum GoalType {
