@@ -46,8 +46,8 @@ export class MarketService {
     lines.push(
       '',
       '*Crypto:*',
-      `• BTC: ${crypto.btc ? crypto.btc + ' VND' : 'N/A'}`,
-      `• ETH: ${crypto.eth ? crypto.eth + ' VND' : 'N/A'}`,
+      `• BTC: ${crypto.btc ? '$' + crypto.btc.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}`,
+      `• ETH: ${crypto.eth ? '$' + crypto.eth.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}`,
     );
 
     const text = lines.join('\n');

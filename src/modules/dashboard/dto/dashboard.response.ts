@@ -3,6 +3,7 @@
 export class WeeklyGoalDTO {
   id: string;
   title: string;
+  description?: string;
   progress: number;
   startDate: string;
   endDate: string;

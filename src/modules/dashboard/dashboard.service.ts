@@ -76,6 +76,7 @@ export class DashboardService {
         return {
           id: goal.id,
           title: goal.title,
+          description: goal.description || undefined,
           progress,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
