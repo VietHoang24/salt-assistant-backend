@@ -15,5 +15,6 @@ import { MarketMessageFormatterService } from './services/market-message-formatt
     MarketNotificationService,
     MarketMessageFormatterService,
   ],
+  exports: [MarketNotificationService],
 })
 export class SchedulerModule {}

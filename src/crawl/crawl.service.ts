@@ -78,28 +78,28 @@ export class CrawlService {
         }
       }
 
-      if (oil.status === 'fulfilled' && oil.value) {
-        results.push({
-          asset: 'OIL',
-          date: today,
-          value: oil.value,
-          unit: 'USD',
-          source: 'MOCK_OIL',
-        });
-      }
+      // if (oil.status === 'fulfilled' && oil.value) {
+      //   results.push({
+      //     asset: 'OIL',
+      //     date: today,
+      //     value: oil.value,
+      //     unit: 'USD',
+      //     source: 'MOCK_OIL',
+      //   });
+      // }
 
-      if (
-        internationalGold.status === 'fulfilled' &&
-        internationalGold.value
-      ) {
-        results.push({
-          asset: 'INTERNATIONAL_GOLD',
-          date: today,
-          value: internationalGold.value,
-          unit: 'USD',
-          source: 'MOCK_INTERNATIONAL_GOLD',
-        });
-      }
+      // if (
+      //   internationalGold.status === 'fulfilled' &&
+      //   internationalGold.value
+      // ) {
+      //   results.push({
+      //     asset: 'INTERNATIONAL_GOLD',
+      //     date: today,
+      //     value: internationalGold.value,
+      //     unit: 'USD',
+      //     source: 'MOCK_INTERNATIONAL_GOLD',
+      //   });
+      // }
 
       // Tạm thời tắt crawl chứng khoán
       // if (stock.status === 'fulfilled' && stock.value) {

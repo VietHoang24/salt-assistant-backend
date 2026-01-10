@@ -32,6 +32,7 @@ export class DailyQuoteService {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      // Use upsert to handle race conditions (repository now uses upsert)
       const saved = await this.repository.create(userId, {
         content: generated.content,
         author: generated.author,
@@ -41,12 +42,23 @@ export class DailyQuoteService {
       return this.mapToResponse(saved);
     } catch (error) {
       this.logger.error(`Failed to get today quote for user ${userId}`, error);
+      
+      // If error is due to unique constraint, try to fetch existing quote
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+        this.logger.warn(`Quote already exists for user ${userId}, fetching existing...`);
+        const existing = await this.repository.getTodayQuoteForUser(userId);
+        if (existing) {
+          return this.mapToResponse(existing);
+        }
+      }
+      
       throw error;
     }
   }
 
   /**
    * Generate and save a new quote for a specific user
+   * This will update existing quote if one exists for today
    */
   async generateNewQuote(
     userId: string,
@@ -58,6 +70,7 @@ export class DailyQuoteService {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      // Use upsert to update if exists, create if not
       const saved = await this.repository.create(userId, {
         content: generated.content,
         author: generated.author,

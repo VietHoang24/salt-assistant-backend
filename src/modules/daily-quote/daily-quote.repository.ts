@@ -26,6 +26,7 @@ export class DailyQuoteRepository {
 
   /**
    * Create a new user-specific daily quote
+   * Uses upsert to handle race conditions where multiple requests try to create the same quote
    */
   async create(
     userId: string,
@@ -35,8 +36,18 @@ export class DailyQuoteRepository {
       date: Date;
     },
   ) {
-    return await this.prisma.user_daily_quotes.create({
-      data: {
+    return await this.prisma.user_daily_quotes.upsert({
+      where: {
+        user_id_date: {
+          user_id: userId,
+          date: data.date,
+        },
+      },
+      update: {
+        content: data.content,
+        author: data.author,
+      },
+      create: {
         user_id: userId,
         content: data.content,
         author: data.author,
